@@ -61,8 +61,8 @@ def create(request):
     body = request.POST['body']
     newTopic = {"id":nextId, "title":title, "body":body}
     topics.append(newTopic)
+    url = '/read/' + str(nextId)
     nextId += 1
-    url = '/read/' + str(len(topics))
     return redirect(url)
 
 @csrf_exempt
@@ -84,11 +84,16 @@ def delete(request):
 def update(request, id):
   global topics
   if request.method == 'GET':
-    selectedTopic = [dict([('title',topic['title']),('body',topic['body'])]) for topic in topics if int(id) == topic['id']]
+    for topic in topics:
+      if topic['id'] == int(id):
+        selectedTopic = {
+          "title": topic['title'],
+          "body": topic['body']
+        }
     article = f'''
-    <form action="/update/{id}/" method="POST">
-      <p><input type="text" name="title" placeholder="title" value="{selectedTopic[0]["title"]}"></p>
-      <p><textarea name="body" placeholder="body">{selectedTopic[0]['body']}</textarea></p>
+    <form action="/update/{id}/" method="post">
+      <p><input type="text" name="title" placeholder="title" value="{selectedTopic["title"]}"></p>
+      <p><textarea name="body" placeholder="body">{selectedTopic['body']}</textarea></p>
       <p><input type="submit"></p>
     </form>
     '''
@@ -96,6 +101,8 @@ def update(request, id):
   elif request.method == 'POST':
     title = request.POST['title']
     body = request.POST['body']
-    topics[int(id) - 1]['title'] = title
-    topics[int(id) - 1]['body'] = body
+    for topic in topics:
+      if topic['id'] == int(id):
+        topic['title'] = title
+        topic['body'] = body
     return redirect(f'/read/{id}')
